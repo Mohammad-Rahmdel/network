@@ -1,0 +1,4 @@
+javac GreetingClient.java GreetingServer.java
+
+in terminal1 -> GreetingServer 8080
+in terminal2 -> GreetingClient localhost 8080

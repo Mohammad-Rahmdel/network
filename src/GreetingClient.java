@@ -28,14 +28,14 @@ public class GreetingClient {
             }
 
 
-            OutputStream outToServer = client.getOutputStream();
-            DataOutputStream out = new DataOutputStream(outToServer);
-
+            DataOutputStream out = new DataOutputStream(client.getOutputStream());
             out.writeUTF("Hello from " + client.getLocalSocketAddress());
-            InputStream inFromServer = client.getInputStream();
-            DataInputStream in = new DataInputStream(inFromServer);
+
+            DataInputStream in = new DataInputStream(client.getInputStream());
 
             System.out.println("Server says " + in.readUTF());
+
+
             try {
                 sleep();
             }
