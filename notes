@@ -1,3 +1,4 @@
+TCP(Question1):
 https://www.tutorialspoint.com/java/java_networking.htm
 
 https://www.geeksforgeeks.org/socket-programming-in-java/
@@ -5,3 +6,7 @@ https://www.geeksforgeeks.org/socket-programming-in-java/
 https://www.geeksforgeeks.org/introducing-threads-socket-programming-java/
 
 https://www.tutorialspoint.com/java/java_files_io.htm
+
+-------------------------------------------------------------------------------
+UDP(Question2):
+https://www.geeksforgeeks.org/working-udp-datagramsockets-java/
