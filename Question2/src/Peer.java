@@ -1,11 +1,12 @@
+import java.net.*;
 import java.util.*;
+import java.io.IOException;
 
 public class Peer {
-    //static int x = 8080;
-    static ArrayList<Peer> peers = new ArrayList<>();
     private String ip = "192.168.1.1";
     private int port;
     private HashMap<String,String> files;
+    private static DatagramSocket socket = null;
 
     public Peer(String port){
         this.port = Integer.parseInt(port);
@@ -38,35 +39,85 @@ public class Peer {
         }
     }
 
-    public static void main(String[] args){
+    public static void broadcast(String broadcastMessage, InetAddress address) throws IOException {
+        socket = new DatagramSocket();
+        socket.setBroadcast(true);
+
+        byte[] buffer = broadcastMessage.getBytes();
+
+        DatagramPacket packet
+                = new DatagramPacket(buffer, buffer.length, address, 8080); /////// port!!!!!!!!!
+        socket.send(packet);
+        socket.close();
+    }
+
+    static List<InetAddress> listAllBroadcastAddresses() throws SocketException {
+        List<InetAddress> broadcastList = new ArrayList<>();
+        Enumeration<NetworkInterface> interfaces
+                = NetworkInterface.getNetworkInterfaces();
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface networkInterface = interfaces.nextElement();
+
+            if (networkInterface.isLoopback() || !networkInterface.isUp()) {
+                continue;
+            }
+
+            networkInterface.getInterfaceAddresses().stream()
+                    .map(a -> a.getBroadcast())
+                    .filter(Objects::nonNull)
+                    .forEach(broadcastList::add);
+        }
+        return broadcastList;
+    }
+
+    public static void main(String[] args) throws IOException{
         Peer p = new Peer(args[0]);
         System.out.println("new peer entered");
-        peers.add(p);
+
+        //new PeerServer(p.port);
+//        try{
+//            new PeerClient(p.port);
+//        }catch (UnknownHostException e){}
 
         Scanner scan = new Scanner(System.in);
         String input = scan.nextLine();
+
 
         while(!input.equals("close")){
             if(input.startsWith("p2p -serve")){
                 String[] splitter = input.split(" ");
                 p.files.put(splitter[3], splitter[5]);
             }
-
             else if (input.startsWith("p2p -receive")){
                 String request = input.split(" ")[2];
-                for(Peer search : peers) {
-                    System.out.println();
-                    if( search.response(request) ){
-                        System.out.println("found");
-                        break;
-                    }
+
+            }
+            else if(input.equals("send")){
+                System.out.println("sending ...");
+                for(InetAddress x : listAllBroadcastAddresses()){
+                    broadcast("Hello", x);
                 }
+                //broadcast("Hello", InetAddress.getByName("255.255.255.255"));
+                //broadcast("Hello", InetAddress.getLocalHost());
+                System.out.println("sending finished");
+
+            }
+            else if(input.equals("client")){
+                new PeerClient(p.port);
+            }else if(input.equals("server")){
+                new PeerServer(p.port);
             }
 
             input = scan.nextLine();
         }
 
-        //p.show();
+
+//        try{
+//            new PeerServer();
+//            new PeerClient();
+//        }catch (UnknownHostException e){}
+
+
     }
 
 }
