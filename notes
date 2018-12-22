@@ -12,3 +12,8 @@ UDP(Question2):
 https://www.geeksforgeeks.org/working-udp-datagramsockets-java/
 
 https://stackoverflow.com/questions/12380587/how-to-build-a-simple-peer-to-peer-system-in-java
+
+https://www.baeldung.com/java-broadcast-multicast
+https://stackoverflow.com/questions/46319799/udp-multicast-filename-to-peers-and-send-receive-found-file-in-peer-using-tcp
+http://www.java2s.com/Code/Java/Network-Protocol/Performsbroadcastandmulticastpeerdetection.htm
+https://www.developer.com/java/data/how-to-multicast-using-java-sockets.html
