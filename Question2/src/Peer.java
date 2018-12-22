@@ -41,6 +41,7 @@ public class Peer {
 
     public static void broadcast(String broadcastMessage, InetAddress address) throws IOException {
         socket = new DatagramSocket();
+        //socket.setReuseAddress(true);
         socket.setBroadcast(true);
 
         byte[] buffer = broadcastMessage.getBytes();
@@ -95,10 +96,17 @@ public class Peer {
             else if(input.equals("send")){
                 System.out.println("sending ...");
                 for(InetAddress x : listAllBroadcastAddresses()){
-                    broadcast("Hello", x);
+                    broadcast("Hello X", x);
                 }
-                //broadcast("Hello", InetAddress.getByName("255.255.255.255"));
-                //broadcast("Hello", InetAddress.getLocalHost());
+                broadcast("Hello 1", InetAddress.getByName("255.255.255.255"));
+                //broadcast("Hello 2", InetAddress.getByName("255.255.255.0")); // netmask
+                //broadcast("Hello 3", InetAddress.getByName("192.168.1.8")); //inet
+                broadcast("Hello 4", InetAddress.getByName("192.168.1.255")); // broadcast
+
+                // broadcast("Hello 5", InetAddress.getByName("255.0.0.0"));
+                // broadcast("Hello 6", InetAddress.getByName("127.0.0.1"));
+                broadcast("Hello 7", InetAddress.getLocalHost());
+
                 System.out.println("sending finished");
 
             }
