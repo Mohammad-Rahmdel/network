@@ -16,6 +16,10 @@ public class Peer {
         //new PeerServer(portBroadcast, this);
     }
 
+    public int getPort(){
+        return this.port;
+    }
+
     public void show(){
         if(files.size() > 0) {
             for (Map.Entry m : files.entrySet()) {
@@ -24,37 +28,22 @@ public class Peer {
         }
     }
 
-    public void sendMessage(){
 
-    }
-
-    public boolean response(String message){
-        System.out.println("response called");
-
-        if(files.containsValue(message))
-            return true;
-
-        if(files.containsKey(message)){
-
-            sendMessage();
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    public static void broadcast(String broadcastMessage, InetAddress address) throws IOException {
+    public static void broadcast(String broadcastMessage, InetAddress address, Peer peer) throws IOException {
         socket = new DatagramSocket();
         //socket.setReuseAddress(true);
         socket.setBroadcast(true);
 
-        byte[] buffer = broadcastMessage.getBytes();
+        byte[] buffer = (broadcastMessage + " " + peer.getPort()).getBytes();
 
         DatagramPacket packet
-                = new DatagramPacket(buffer, buffer.length, address, portBroadcast); /////// port!!!!!!!!!
+                = new DatagramPacket(buffer, buffer.length, address, portBroadcast);
+        int portNumber = packet.getPort();
+        System.out.println("port number = " + portNumber);
+        new PeerClient(peer);
         socket.send(packet);
         socket.close();
+
     }
 
     static List<InetAddress> listAllBroadcastAddresses() throws SocketException {
@@ -97,18 +86,20 @@ public class Peer {
             }
             else if (input.startsWith("p2p -receive")){
                 String request = input.split(" ")[2];
-                broadcast(request, InetAddress.getByName("255.255.255.255"));
+                broadcast(request, InetAddress.getByName("255.255.255.255"), p);
             }
             else if(input.equals("show")){
                 p.show();
             }
             else if(input.equals("send")){
                 //System.out.println("sending ...");
+
                 String sendFile = scan.nextLine();
 //                for(InetAddress x : listAllBroadcastAddresses()){
 //                    broadcast("Hello X", x);
 //                }
-                broadcast(sendFile, InetAddress.getByName("255.255.255.255"));
+                broadcast(sendFile, InetAddress.getByName("255.255.255.255"), p);
+
                 //broadcast("Hello 2", InetAddress.getByName("255.255.255.0")); // netmask
                 //broadcast("Hello 3", InetAddress.getByName("192.168.1.8")); //inet
                 //broadcast("Hello 4", InetAddress.getByName("172.23.151.255")); // broadcast
@@ -121,7 +112,7 @@ public class Peer {
 
             }
             else if(input.equals("client")){
-                new PeerClient(p.port);
+                //new PeerClient(p.port);
             }else if(input.equals("server")){
                 //new PeerServer(p.port);
             }

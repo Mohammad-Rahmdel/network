@@ -43,18 +43,22 @@ public class PeerServer extends Thread {
 
             int portReceived = DpReceive.getPort();
             InetAddress address = DpReceive.getAddress();
-            //System.out.println("port = " + portReceived);
+            System.out.println("port = " + portReceived);
+            portReceived = Integer.parseInt(data(receive).toString().split(" ")[1]);
             //System.out.println("InetAddress = " + address);
 
 
             ////////////////////////////
-            String fileName = data(receive).toString();
+            String fileName = data(receive).toString().split(" ")[0];
             if (peer.files.containsKey(fileName)){
                 System.out.println("File Found :)))");
 
                 res = new byte[65535];
-                res = ("response " + fileName).getBytes();
-                DatagramPacket dSend = new DatagramPacket(res, res.length, address, port);
+                res = fileName.getBytes();
+
+                //portReceived = 8888;
+                DatagramPacket dSend = new DatagramPacket(res, res.length, address, portReceived);
+                //DatagramPacket dSend = new DatagramPacket(res, res.length, address, port);
                 try {
                     socket.send(dSend);
                 } catch (IOException e){}
