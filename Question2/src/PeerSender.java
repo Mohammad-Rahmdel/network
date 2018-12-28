@@ -1,7 +1,10 @@
+import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
 
 public class PeerSender extends Thread {
 
@@ -46,9 +49,13 @@ public class PeerSender extends Thread {
             ds.send(DpSend);
             System.out.println("Sender: File Sent = " + fileName);
 
-            sendFile();
 
 
+            ds.setSoTimeout(0);
+            sendFile(ds, fileName, peer.getAddress(), Integer.parseInt(portPacket), address);
+            //sendFile(fileName, peer.getAddress(), port, address);
+            System.out.println("Sender: finished");
+            ds.close();
 
         } catch (IOException e){
             System.out.println("Sender: Timeout");
@@ -56,8 +63,9 @@ public class PeerSender extends Thread {
         }
 
 
-        ds.close();
-        System.out.println("Sender: finished");
+
+
+
 
 //        try {
 //            this.join();
@@ -67,7 +75,114 @@ public class PeerSender extends Thread {
     }
 
 
-    public static void sendFile(){}
+    public static void sendFile(DatagramSocket ds, String fileName, String address, int portSend, InetAddress ip) {
+        System.out.println("sendFile method invoked");
+        System.out.println("IP = " + ip);
+        System.out.println("Port = " + portSend);
+        DatagramSocket socketSend = ds;
+//        try {
+//            socketSend = new DatagramSocket();
+//        }catch (IOException e){
+//            System.out.println("Sender IO problem1");
+//        }
+
+        String directory = address + fileName;
+        File file;
+        file = new File(directory);
+        byte[] fileContent = null;
+
+        try {
+            fileContent = Files.readAllBytes(file.toPath());
+        } catch (IOException e){}
+
+        System.out.println("S1");
+        int fileSize = fileContent.length;
+        System.out.println("Requested File Size = " + fileSize);
+        int maxSize = 65000;
+        System.out.println("Max Size sending via UDP = " + maxSize);
+        int numberOfPackets = fileSize/maxSize + 1;
+        System.out.println("Number of packets = " + numberOfPackets);
+        int lastPacketSize = fileSize%maxSize;
+        System.out.println("Last packet size = " + lastPacketSize);
+        int t = numberOfPackets / 40;
+        t += 3;
+
+        int n = 6;
+        byte[] fileLength = new byte[6];
+
+        n--;
+        while ( n >= 0 ){ // changing base of the size from 10 to 128
+            fileLength[n] = (byte) (fileSize / (int)Math.pow(128,n));
+            fileSize -= fileLength[n] * (int)Math.pow(128,n);
+            n--;
+        }
+
+        System.out.println("S2");
+        DatagramPacket DpSend =
+                new DatagramPacket(fileLength, fileLength.length, ip, portSend);
+        try {
+            socketSend.send(DpSend); //sending size of the file
+        } catch (IOException e){
+            System.out.println("Sender IO problem2");
+        }
+
+        System.out.println("S3");
+
+
+        for(int i = 0; i < (numberOfPackets - 1); i++) { // sending packets
+            byte[] arr = new byte[maxSize];
+            for (int j = 0; j < maxSize; j++) {
+                arr[j] = fileContent[j + i * maxSize];
+            }
+
+            try {
+                sleep(t);
+                //t++;
+            }
+            catch (InterruptedException e) {
+                System.out.println("got interrupted!");
+            }
+
+            System.out.println("S4");
+            DpSend = new DatagramPacket(arr, arr.length, ip, portSend);
+            try {
+                socketSend.send(DpSend);
+            }
+            catch (IOException e){
+                System.out.println("Sender IO problem3");
+            }
+            System.out.println("S5");
+        }
+        try {
+            sleep(t);
+        }
+        catch (InterruptedException e) {
+            System.out.println("got interrupted!");
+        }
+
+        byte[] arr = new byte[lastPacketSize];
+        for(int i = 0; i < lastPacketSize; i++){
+            arr[i] = fileContent[i + (numberOfPackets - 1) * maxSize];
+        }
+        System.out.println("S6");
+        DpSend = new DatagramPacket(arr, arr.length, ip, portSend);
+
+        try {
+            socketSend.send(DpSend);// sending the last packet
+        }
+        catch (IOException e){
+            System.out.println("Sender IO problem4");
+        }
+        System.out.println("S7");
+
+        socketSend.close();
+
+
+    }
+
+    public static void sleep(int t) throws InterruptedException {
+        TimeUnit.MILLISECONDS.sleep(t);
+    }
 
     public static StringBuilder data(byte[] a)
     {
