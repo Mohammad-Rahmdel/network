@@ -1,2 +1,2 @@
-javac Peer.java PeerServer.java PeerClient.java 
+javac Peer.java PeerServer.java PeerClient.java PeerSender.java
 

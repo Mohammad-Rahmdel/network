@@ -1,83 +1,109 @@
 import java.io.IOException;
-import java.util.*;
 import java.net.*;
 
 public class PeerServer extends Thread {
-    DatagramSocket ds;
+    //DatagramSocket ds;
     private byte[] receive;
     private byte[] res;
-    int port;
+    private int port;
+    private int portBroadcast;
     DatagramPacket DpReceive = null;
     MulticastSocket socket;
     private Peer peer;
+    private boolean run = true;
+    private boolean receiveFlag = true;
 
     public PeerServer(int port, Peer peer){
         this.peer = peer;
+        this.portBroadcast = port;
+        this.port = peer.getPort();
 
-        this.port = port;
+//        if (port != 4445) {
+//            try {
+//                ds.setSoTimeout(10000);
+//            } catch (SocketException e) {
+//                System.out.println("Server: Socket Exception Occurred");
+//            }
+//        }
+
+
         try {
             //ds = new DatagramSocket(port);
-            socket = new MulticastSocket(port);
+            socket = new MulticastSocket(portBroadcast);
             //ds.setReuseAddress(true);
         }catch (SocketException e){}
         catch (IOException e){}
+
         receive = new byte[65535];
 
 
-        this.start();
+        //this.start();
+    }
+
+    public void terminate(){
+        System.out.println("Server: Thread terminated");
+        run = false;
+        receiveFlag = false;
     }
 
     public void run(){
 
-        while (true)
+
+        while (run)
         {
+            receiveFlag = true;
             DpReceive = new DatagramPacket(receive, receive.length);
-            System.out.println("wait server");
+            System.out.println("Server: The peer is listening to the broadcast messages");
+
             try {
-                //ds.receive(DpReceive);
-                socket.receive(DpReceive);
-            }catch (IOException e){}
-            //System.out.println("finished server");
+                socket.setSoTimeout(3000); // checks thread status
+            } catch (SocketException e) {
+                System.out.println("Server: Socket Exception Occurred");
+            }
 
-            //System.out.println("Client: " + data(receive));
 
-            int portReceived = DpReceive.getPort();
+
+            while(receiveFlag){
+                try {
+                    socket.receive(DpReceive);
+                    System.out.println("Server: Broadcast message received");
+                    receiveFlag = false;
+                } catch (IOException e){
+                    //System.out.println("Time out");
+                }
+            }
+            if(!run)
+                break; // close command entered by the peer
+
             InetAddress address = DpReceive.getAddress();
-            System.out.println("port = " + portReceived);
-            portReceived = Integer.parseInt(data(receive).toString().split(" ")[1]);
-            //System.out.println("InetAddress = " + address);
 
-
-            ////////////////////////////
+            //processing the broadcast message
+            System.out.println("Server: message = " + data(receive).toString());
+            int portReceived = Integer.parseInt(data(receive).toString().split(" ")[1]);
             String fileName = data(receive).toString().split(" ")[0];
-            if (peer.files.containsKey(fileName)){
-                System.out.println("File Found :)))");
 
+
+            if (peer.files.containsKey(fileName) && !(portReceived == port)){ // not to send message to its self
+
+                //new PeerServer(port, peer); // waits for new stage
+                new PeerSender(peer);
+
+                System.out.println("Server: File Found :) = " + fileName + " " + peer.getPort());
                 res = new byte[65535];
-                res = fileName.getBytes();
-
-                //portReceived = 8888;
+                res = (fileName + " " + peer.getPort()).getBytes(); // fileName + portNumber >>> client
                 DatagramPacket dSend = new DatagramPacket(res, res.length, address, portReceived);
-                //DatagramPacket dSend = new DatagramPacket(res, res.length, address, port);
                 try {
                     socket.send(dSend);
-                } catch (IOException e){}
-            } else if(fileName.startsWith("response")) {
-                fileName = fileName.split(" ")[1];
-                System.out.println();
-                System.out.println(fileName + " received");
-                peer.files.put(fileName, "an arbitrary directory");
+                } catch (IOException e) {
+                }
             }
             else
-                System.out.println("Sorry I don't have this file :(((");
-
-
-
-
-
+                System.out.println("Server: Sorry I don't have this file :(((");
 
             receive = new byte[65535];
         }
+
+        System.out.println("Server: 24/7 Server ended");
     }
 
 
