@@ -1,9 +1,13 @@
-import java.net.*;
-import java.util.*;
+import java.net.DatagramSocket;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Map;
 import java.io.IOException;
 
 public class Peer {
-    private String ip = "192.168.1.1";
+    //private String ip = "192.168.1.1";
     private String id;
     private String address;
     private int port;
@@ -11,19 +15,17 @@ public class Peer {
     public HashMap<String,String> files;
     private static DatagramSocket socket = null;
     private PeerServer peerServer;
-    //private Thread threadServer;
 
     public Peer(String id, String port){
         this.id = id;
         this.port = Integer.parseInt(port);
-        address = "/home/mohammad/Desktop/PeersFiles/" + id + "/";
+        address = "/home/mohammad/Desktop/PeersFiles/" + this.id + "/";
         files = new HashMap<>();
         peerServer = new PeerServer(portBroadcast, this); // all the peers are listening to the broadcast port
-        //threadServer = new Thread(peerServer);
-        //threadServer.start();
         peerServer.start();
     }
 
+    public String getId() { return this.id; }
     public int getPort(){
         return this.port;
     }
@@ -32,15 +34,19 @@ public class Peer {
     public void show(){
         if(files.size() > 0) {
             for (Map.Entry m : files.entrySet()) {
-                System.out.println(m.getKey() + " " + m.getValue());
+                System.out.println(m.getKey() + " - directory: " + m.getValue());
             }
         }
     }
 
+//    public void changePort(){
+//        this.port++;
+//        System.out.println("***** My port is = " + port);
+//    }
 
     /**
      * @param broadcastMessage = requested file
-     * the peer sends it's port too
+     * the peer sends its port too
      */
     public static void broadcast(String broadcastMessage, InetAddress address, Peer peer) throws IOException {
         socket = new DatagramSocket();
@@ -58,7 +64,7 @@ public class Peer {
 
     public static void main(String[] args) throws IOException{
         Peer p = new Peer(args[0], args[1]);
-        System.out.println("new peer entered");
+        //System.out.println("new peer entered");
 
         Scanner scan = new Scanner(System.in);
         String input = scan.nextLine();
@@ -82,37 +88,9 @@ public class Peer {
             else if(input.equals("show")){
                 p.show();
             }
-            else if(input.equals("send")){
-                //System.out.println("sending ...");
-
-                String sendFile = scan.nextLine();
-//                for(InetAddress x : listAllBroadcastAddresses()){
-//                    broadcast("Hello X", x);
-//                }
-                broadcast(sendFile, InetAddress.getByName("255.255.255.255"), p);
-
-                //broadcast("Hello 2", InetAddress.getByName("255.255.255.0")); // netmask
-                //broadcast("Hello 3", InetAddress.getByName("192.168.1.8")); //inet
-                //broadcast("Hello 4", InetAddress.getByName("172.23.151.255")); // broadcast
-
-                //broadcast("Hello 5", InetAddress.getByName("255.0.0.0"));
-                //broadcast("Hello 6", InetAddress.getByName("127.0.0.1"));
-                //broadcast("Hello 7", InetAddress.getLocalHost());
-
-                //System.out.println("sending finished");
-
-            }
             input = scan.nextLine();
         }
-        System.out.println("finishing command");
-        //try {
-            p.peerServer.terminate();
-        //    p.peerServer.join();
-
-        //} catch (InterruptedException e){}
-
-
-
+        p.peerServer.terminate(); // kills the broadcast listener thread
     }
 
 }

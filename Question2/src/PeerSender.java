@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class PeerSender extends Thread {
 
     private Peer peer;
-    private int port;
+    //private int port;
     private DatagramSocket ds;
     DatagramPacket DpReceive = null;
     DatagramPacket DpSend = null;
@@ -18,9 +18,7 @@ public class PeerSender extends Thread {
 
     public PeerSender(Peer peer){
         this.peer = peer;
-        this.port = peer.getPort();
-
-
+        //this.port = peer.getPort();
         this.start();
     }
 
@@ -33,44 +31,38 @@ public class PeerSender extends Thread {
         System.out.println("Sender: New Sender is ready");
 
         try {
-            ds = new DatagramSocket(port);
-            ds.setSoTimeout(100); // when file has sent by another peer
+            ds = new DatagramSocket(peer.getPort() + 1);
+            ds.setSoTimeout(3000); // when file has sent by another peer
             ds.receive(DpReceive);
             System.out.println("Sender: Request message received = " + data(receive).toString());
 
-            //sending
-            // should be completed
+            //sending ...
             String fileName = data(receive).toString().split(" ")[0];
             String portPacket = data(receive).toString().split(" ")[1];
+
+            System.out.println("File Name = " + fileName);
+            System.out.println("Specific Port = " + portPacket);
+
             InetAddress address = DpReceive.getAddress();
             send = (fileName).getBytes();
             DpSend = new DatagramPacket(send, send.length, address, Integer.parseInt(portPacket));
-
             ds.send(DpSend);
             System.out.println("Sender: File Sent = " + fileName);
 
 
 
-            ds.setSoTimeout(0);
+            //ds.setSoTimeout(0);
             sendFile(ds, fileName, peer.getAddress(), Integer.parseInt(portPacket), address);
-            //sendFile(fileName, peer.getAddress(), port, address);
             System.out.println("Sender: finished");
             ds.close();
+            System.out.println("Sender: socket closed 1");
 
         } catch (IOException e){
             System.out.println("Sender: Timeout");
             System.out.println(e);
+            ds.close();
+            System.out.println("Sender: socket closed 2");
         }
-
-
-
-
-
-
-//        try {
-//            this.join();
-//        } catch (InterruptedException e){}
-
 
     }
 
@@ -80,11 +72,6 @@ public class PeerSender extends Thread {
         System.out.println("IP = " + ip);
         System.out.println("Port = " + portSend);
         DatagramSocket socketSend = ds;
-//        try {
-//            socketSend = new DatagramSocket();
-//        }catch (IOException e){
-//            System.out.println("Sender IO problem1");
-//        }
 
         String directory = address + fileName;
         File file;
@@ -120,6 +107,9 @@ public class PeerSender extends Thread {
         System.out.println("S2");
         DatagramPacket DpSend =
                 new DatagramPacket(fileLength, fileLength.length, ip, portSend);
+
+        System.out.println("Send Port = " + DpSend.getPort());
+
         try {
             socketSend.send(DpSend); //sending size of the file
         } catch (IOException e){
@@ -137,13 +127,12 @@ public class PeerSender extends Thread {
 
             try {
                 sleep(t);
-                //t++;
             }
             catch (InterruptedException e) {
                 System.out.println("got interrupted!");
             }
 
-            System.out.println("S4");
+            //System.out.println("S4");
             DpSend = new DatagramPacket(arr, arr.length, ip, portSend);
             try {
                 socketSend.send(DpSend);
@@ -151,7 +140,7 @@ public class PeerSender extends Thread {
             catch (IOException e){
                 System.out.println("Sender IO problem3");
             }
-            System.out.println("S5");
+            //System.out.println("S5");
         }
         try {
             sleep(t);
@@ -175,7 +164,7 @@ public class PeerSender extends Thread {
         }
         System.out.println("S7");
 
-        socketSend.close();
+        //socketSend.close();
 
 
     }
