@@ -82,10 +82,17 @@ public class PeerClient extends Thread {
                 System.out.println("Client: File received successfully *___* = " + data(receive).toString());
                 String[] file = data(receive).toString().split(" "); // ?????????????
                 String f = file[0]; // ???????????????????????????????????????????????????
+                String[] check = data(receive).toString().split(" ");
+                if(check.length == 1){
+                    peer.files.put(f, peer.getAddress());
+                    receiveFile(ds, f, peer.getAddress(), port, address);
+                }
+                else {
+                    System.out.println("UDP connection failed");
+                }
 
-                peer.files.put(f, peer.getAddress());
 
-                receiveFile(ds, f, peer.getAddress(), port, address);
+
             }
 
         } catch (NullPointerException e){
