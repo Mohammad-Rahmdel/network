@@ -1,6 +1,11 @@
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.net.SocketTimeoutException;
 
 public class PeerClient extends Thread {
 
@@ -47,7 +52,7 @@ public class PeerClient extends Thread {
 
 
         try{
-            if(receive[0] != 13) { // when no one has the requested file
+            if(receive[0] != 13) { // skips when no one has the requested file and timeout has occurred
 
                 ds.close();
                 ds = new DatagramSocket(port);
@@ -67,7 +72,7 @@ public class PeerClient extends Thread {
 
 
 
-                //receiving file
+                //receiving file ...
                 receive = new byte[65535];
                 receivePacket = new DatagramPacket(receive, receive.length);
                 try{
@@ -80,8 +85,11 @@ public class PeerClient extends Thread {
                 }
 
                 System.out.println("Client: File received successfully *___* = " + data(receive).toString());
-                String[] file = data(receive).toString().split(" "); // ?????????????
-                String f = file[0]; // ???????????????????????????????????????????????????
+                String[] file = data(receive).toString().split(" ");
+                String f = file[0];
+                ////////////////////////////////
+                //////// Something Odd /////////
+                ////////////////////////////////
                 String[] check = data(receive).toString().split(" ");
                 if(check.length == 1){
                     peer.files.put(f, peer.getAddress());
@@ -129,17 +137,17 @@ public class PeerClient extends Thread {
         DatagramPacket DpReceive = null;
         int n = 6;
         byte[] fileLength = new byte[n];
-        System.out.println("R1");
+        //System.out.println("R1");
         DpReceive = new DatagramPacket(fileLength, fileLength.length);
 
         try {
-            System.out.println("stucks here.");
+            //System.out.println("stucks here.");
             socketReceive.receive(DpReceive); // receiving size of the requested file
         }catch (IOException e){
             System.out.println("Client IO problem 2");
         }
 
-        System.out.println("R2");
+        //System.out.println("R2");
         int fileSize = 0;
         for(int i = 0; i < n; i++) // changing base of the size from 128 to 10
             fileSize += fileLength[i] * (int)Math.pow(128,i);
@@ -163,11 +171,10 @@ public class PeerClient extends Thread {
             System.out.println("Client IO problem 3");
         }
 
-        System.out.println("R3");
-
+        //System.out.println("R3");
 
         for(int i = 0; i < (numberOfPackets - 1); i++) { // receiving packets
-            System.out.println("x = " + i);
+            System.out.println("Packet " + i + " is receiving ...");
             byte[] arr = new byte[maxSize];
             DpReceive = new DatagramPacket(arr, arr.length);
             try{
@@ -182,11 +189,11 @@ public class PeerClient extends Thread {
                 fileContent[j + i*maxSize] = arr[j]; // appending packets
             }
         }
-        System.out.println("R4");
+        //System.out.println("R4");
 
         byte[] arr = new byte[lastPacketSize];
         DpReceive = new DatagramPacket(arr, arr.length);
-        System.out.println("check2");
+        //System.out.println("check2");
         try{
             socketReceive.receive(DpReceive); // receiving the last packet
         }catch (SocketTimeoutException e){
@@ -195,20 +202,22 @@ public class PeerClient extends Thread {
         }catch (IOException e){
             System.out.println("Client IO problem 5");
         }
-        System.out.println("R5");
+        //System.out.println("R5");
 
 
-        socketReceive.close();
+        ///////////////////////// ??????????????????????
+        socketReceive.close(); // ??????????????????????
+        ///////////////////////// ??????????????????????
 
-        System.out.println("check3");
+        //System.out.println("check3");
         for(int i = 0; i < fileSize%maxSize; i++){
             fileContent[i + (numberOfPackets - 1) * maxSize] = arr[i]; // appending the last packet
         }
-        System.out.println("check4");
+        //System.out.println("check4");
         try (FileOutputStream fos = new FileOutputStream(directory)) {
             fos.write(fileContent);
         } catch (IOException e){}
-        System.out.println("check5");
+        //System.out.println("check5");
         System.out.println(lossCounter + " packets lost");
 
 

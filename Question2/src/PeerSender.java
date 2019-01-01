@@ -19,8 +19,6 @@ public class PeerSender extends Thread {
     public PeerSender(Peer peer){
         this.peer = peer;
         this.port = peer.getPort();
-
-
         this.start();
     }
 
@@ -38,7 +36,7 @@ public class PeerSender extends Thread {
             ds.receive(DpReceive);
             System.out.println("Sender: Request message received = " + data(receive).toString());
 
-            //sending
+            //sending ...
             String fileName = data(receive).toString().split(" ")[0];
             String portPacket = data(receive).toString().split(" ")[1];
             InetAddress address = DpReceive.getAddress();
@@ -83,7 +81,7 @@ public class PeerSender extends Thread {
             fileContent = Files.readAllBytes(file.toPath());
         } catch (IOException e){}
 
-        System.out.println("S1");
+        //System.out.println("S1");
         int fileSize = fileContent.length;
         System.out.println("Requested File Size = " + fileSize);
         int maxSize = 65000;
@@ -105,17 +103,17 @@ public class PeerSender extends Thread {
             n--;
         }
 
-        System.out.println("S2");
+        //System.out.println("S2");
         DatagramPacket DpSend =
                 new DatagramPacket(fileLength, fileLength.length, ip, portSend);
-        try {
-            //socketSend.send(DpSend); //sending size of the file
+        try { // sending size of the file
+            //socketSend.send(DpSend);
             ds.send(DpSend);
         } catch (IOException e){
             System.out.println("Sender IO problem2");
         }
 
-        System.out.println("S3");
+        //System.out.println("S3");
 
 
         for(int i = 0; i < (numberOfPackets - 1); i++) { // sending packets
@@ -131,7 +129,7 @@ public class PeerSender extends Thread {
                 System.out.println("got interrupted!");
             }
 
-            System.out.println("S4");
+            //System.out.println("S4");
             DpSend = new DatagramPacket(arr, arr.length, ip, portSend);
             try {
                 //socketSend.send(DpSend);
@@ -140,7 +138,7 @@ public class PeerSender extends Thread {
             catch (IOException e){
                 System.out.println("Sender IO problem3");
             }
-            System.out.println("S5");
+            //System.out.println("S5");
         }
         try {
             sleep(t);
@@ -153,7 +151,7 @@ public class PeerSender extends Thread {
         for(int i = 0; i < lastPacketSize; i++){
             arr[i] = fileContent[i + (numberOfPackets - 1) * maxSize];
         }
-        System.out.println("S6");
+        //System.out.println("S6");
         DpSend = new DatagramPacket(arr, arr.length, ip, portSend);
 
         try {
@@ -163,7 +161,7 @@ public class PeerSender extends Thread {
         catch (IOException e){
             System.out.println("Sender IO problem4");
         }
-        System.out.println("S7");
+        //System.out.println("S7");
 
         //socketSend.close();
     }

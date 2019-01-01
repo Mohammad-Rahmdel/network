@@ -1,10 +1,13 @@
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.SocketException;
 
 public class PeerServer extends Thread {
     //DatagramSocket ds;
     private byte[] receive;
-    private byte[] res;
+    private byte[] res; // response
     private int port;
     private int portBroadcast;
     DatagramPacket DpReceive = null;
@@ -49,7 +52,7 @@ public class PeerServer extends Thread {
 
 
 
-            while(receiveFlag){
+            while(receiveFlag){ // while the thread is alive
                 try {
                     socket.receive(DpReceive);
                     System.out.println("Server: Broadcast message received");
@@ -74,7 +77,7 @@ public class PeerServer extends Thread {
                 new PeerSender(peer);
                 System.out.println("Server: File Found :) = " + fileName + " " + peer.getPort());
                 res = new byte[65535];
-                res = (fileName + " " + peer.getPort()).getBytes(); // fileName + portNumber >>> client
+                res = (fileName + " " + peer.getPort()).getBytes(); // [fileName + portNumber] >>> client
                 DatagramPacket dSend = new DatagramPacket(res, res.length, address, portReceived);
                 try {
                     socket.send(dSend);
@@ -88,7 +91,7 @@ public class PeerServer extends Thread {
         }
 
         socket.close();
-        System.out.println("Server: 24/7 Server ended");
+        System.out.println("Server: broadcast socket closed");
     }
 
 
