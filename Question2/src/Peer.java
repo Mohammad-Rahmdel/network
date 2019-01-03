@@ -23,7 +23,7 @@ public class Peer {
         address = "/home/mohammad/Desktop/PeersFiles/" + id + "/";    // the directory to save files
         files = new HashMap<>();
         peerServer = new PeerServer(portBroadcast, this); // all the peers are listening to the broadcast port
-        peerServer.start(); // starts listening to the broadcast port
+        peerServer.start(); // starts listening C:\Users\Mohammad\Desktop\New folderto the broadcast port
     }
 
     public int getPort(){

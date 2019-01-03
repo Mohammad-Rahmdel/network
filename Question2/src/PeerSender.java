@@ -41,7 +41,7 @@ public class PeerSender extends Thread {
             String portPacket = data(receive).toString().split(" ")[1];
             InetAddress address = DpReceive.getAddress();
             send = (fileName).getBytes();
-            DpSend = new DatagramPacket(send, send.length, address, Integer.parseInt(portPacket));
+            DpSend = new DatagramPacket(send, send.length, address, (Integer.parseInt(portPacket) + 10));
 
             ds.send(DpSend);
             System.out.println("Sender: File Sent = " + fileName);
@@ -49,7 +49,7 @@ public class PeerSender extends Thread {
 
 
             //ds.setSoTimeout(0);
-            sendFile(ds, fileName, peer.getAddress(), Integer.parseInt(portPacket), address);
+            sendFile(ds, fileName, peer.getAddress(), (Integer.parseInt(portPacket) + 10), address);
             //sendFile(fileName, peer.getAddress(), port, address);
             System.out.println("Sender: finished");
             ds.close();

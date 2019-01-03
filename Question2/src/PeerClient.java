@@ -10,6 +10,7 @@ import java.net.SocketTimeoutException;
 public class PeerClient extends Thread {
 
     DatagramSocket ds;
+    DatagramSocket ds2;
     DatagramPacket DPSend = null;
     int port;
     InetAddress ip;
@@ -24,7 +25,10 @@ public class PeerClient extends Thread {
         this.port = peer.getPort();
         try {
             ds = new DatagramSocket(port);
+            ds2 = new DatagramSocket(port + 10);
+
             ds.setSoTimeout(1000); // when all the peers do not have the requested file, timeout occurs
+            ds2.setSoTimeout(1000);
         } catch (SocketException e) {
             System.out.println("Client: Socket Exception Occurred");
             System.out.println(e);
@@ -54,21 +58,27 @@ public class PeerClient extends Thread {
         try{
             if(receive[0] != 13) { // skips when no one has the requested file and timeout has occurred
 
-                ds.close();
-                ds = new DatagramSocket(port);
 
 
+                System.out.println("Client: check00000");
                 System.out.println("Client: Response Received = " + data(receive).toString());
                 String fileName = data(receive).toString().split(" ")[0];
                 String portPacket = data(receive).toString().split(" ")[1];
 
+                System.out.println("Client: check00");
                 InetAddress address = receivePacket.getAddress();
+                System.out.println("Client: check000");
 
 
                 send = (fileName + " " + peer.getPort()).getBytes();
 
+                System.out.println("Client: check1");
                 DPSend = new DatagramPacket(send, send.length, address, Integer.parseInt(portPacket)); // >>> Sender
+                System.out.println("Client: check2");
                 ds.send(DPSend);
+                System.out.println("Client: check3");
+                ds.close();
+                System.out.println("Client: check4");
 
 
 
@@ -76,7 +86,7 @@ public class PeerClient extends Thread {
                 receive = new byte[65535];
                 receivePacket = new DatagramPacket(receive, receive.length);
                 try{
-                    ds.receive(receivePacket);
+                    ds2.receive(receivePacket);
                 } catch (IOException e){
                     System.out.println("Client: Timed Out 2");
                     System.out.println(e);
@@ -93,7 +103,7 @@ public class PeerClient extends Thread {
                 String[] check = data(receive).toString().split(" ");
                 if(check.length == 1){
                     peer.files.put(f, peer.getAddress());
-                    receiveFile(ds, f, peer.getAddress(), port, address);
+                    receiveFile(ds2, f, peer.getAddress(), port, address);
                 }
                 else {
                     System.out.println("UDP connection failed");
@@ -109,7 +119,9 @@ public class PeerClient extends Thread {
         }
 
         try {
+            ////////////////////////////////////////////////////////////////////////////////
             ds.close();
+            ds2.close();
             System.out.println("Client: socket closed");
         } catch (NullPointerException e){
             System.out.println("Client: Socket Closing Problem");
