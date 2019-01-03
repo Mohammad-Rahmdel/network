@@ -1,13 +1,14 @@
 import java.io.IOException;
-import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.SocketException;
 
 public class PeerServer extends Thread {
+    //DatagramSocket ds;
     private byte[] receive;
-    private byte[] res;
-    //private int port;
+    private byte[] res; // response
+    private int port;
     private int portBroadcast;
     DatagramPacket DpReceive = null;
     MulticastSocket socket;
@@ -18,16 +19,14 @@ public class PeerServer extends Thread {
     public PeerServer(int port, Peer peer){
         this.peer = peer;
         this.portBroadcast = port;
-        //this.port = peer.getPort();
+        this.port = peer.getPort();
 
         try {
-            socket = new MulticastSocket(portBroadcast); // Datagram sockets must listen to different ports. Hence, we used
-            // MulticastSocket for all peers listening to the broadcast port.
+            socket = new MulticastSocket(portBroadcast);
         }catch (SocketException e){}
         catch (IOException e){}
 
         receive = new byte[65535];
-
     }
 
     public void terminate(){
@@ -37,6 +36,7 @@ public class PeerServer extends Thread {
     }
 
     public void run(){
+
 
         while (run)
         {
@@ -52,7 +52,7 @@ public class PeerServer extends Thread {
 
 
 
-            while(receiveFlag){
+            while(receiveFlag){ // while the thread is alive
                 try {
                     socket.receive(DpReceive);
                     System.out.println("Server: Broadcast message received");
@@ -62,7 +62,7 @@ public class PeerServer extends Thread {
                 }
             }
             if(!run)
-                break; // close command entered by the user
+                break; // close command entered by the peer
 
             InetAddress address = DpReceive.getAddress();
 
@@ -71,22 +71,18 @@ public class PeerServer extends Thread {
             int portReceived = Integer.parseInt(data(receive).toString().split(" ")[1]);
             String fileName = data(receive).toString().split(" ")[0];
 
-            //peer.changePort();
 
+            if (peer.files.containsKey(fileName) && !(portReceived == port)){ // not to send message to its self
 
-            if (peer.files.containsKey(fileName) && !(portReceived == peer.getPort())){ // not to send message to itself
-
-
-                System.out.println("Server: File Found! My Response = " + fileName + " " + peer.getPort() + 1);
+                new PeerSender(peer);
+                System.out.println("Server: File Found :) = " + fileName + " " + peer.getPort());
                 res = new byte[65535];
-                res = (fileName + " " + (peer.getPort() + 1)).getBytes(); // fileName + portNumber >>> client
+                res = (fileName + " " + peer.getPort()).getBytes(); // [fileName + portNumber] >>> client
                 DatagramPacket dSend = new DatagramPacket(res, res.length, address, portReceived);
                 try {
                     socket.send(dSend);
                 } catch (IOException e) {
-                    System.out.println("Server: IO Exception");
                 }
-                new PeerSender(peer); // this peer is ready for sending the file
             }
             else
                 System.out.println("Server: Sorry I don't have this file :(((");
@@ -95,7 +91,7 @@ public class PeerServer extends Thread {
         }
 
         socket.close();
-        System.out.println("Server: 24/7 Server ended");
+        System.out.println("Server: broadcast socket closed");
     }
 
 
